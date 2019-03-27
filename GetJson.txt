@@ -1,0 +1,4 @@
+curl -X POST "http://localhost:5000/parse" -d "{\"q\":\"can you get me full details for ADVOCARE\"}" | python -m json.tool
+curl -X POST "http://localhost:5000/parse" -d "{\"q\":\" hey, get me avg claims denied for NYU in 2016 for E&I\"}" | python -m json.tool
+
+http://localhost:5000/parse?q=hello%20there

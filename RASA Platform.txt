@@ -1,0 +1,290 @@
+Rasa NLU: 
+Performs Natural Language Understanding, which means taking free-form text like Please send the confirmation to amy@example.com
+and turning it into structured data. 
+
+Rasa Core: 
+Performs Dialog Management, which means keeping track of a conversation, and deciding how to proceed. 
+
+
+
+First Bot:
+Pre Requisites:
+1. Install Anaconda:
+	Installation:
+	$ cd /tmp
+	$ curl -O https://repo.anaconda.com/archive/Anaconda2-5.2.0-Linux-x86_64.sh
+	$ sha256sum Anaconda3-5.0.1-Linux-x86_64.sh
+	$ bash Anaconda3-5.0.1-Linux-x86_64.sh
+	$ source ~/.bashrc
+	$ conda list
+	
+	Configuration:
+	$ conda search "^python$"
+	$ conda create --name dev python=2.7 numpy scipy
+	$ source activate dev
+	$ python --version
+	$ source deactivate
+	$ conda info --envs
+	$ conda install --name my_env35 numpy
+	
+2. source activate dev
+3. Install PIP
+curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py"
+python get-pip.py
+
+4. Install Python dev
+sudo apt-get install python-dev   # for python2.x installs
+sudo apt-get install python3-dev  # for python3.x installs
+
+5. Installing RASA Stack
+sudo pip install rasa_core
+
+6. Install RASA CORE SDK (Optional)
+sudo pip install rasa_core_sdk	
+
+7. Install RASA NLU with Tensorflow
+sudo pip install rasa_nlu[tensorflow]
+
+8. Create a Folder in any directory
+rasademo
+
+9. Add below files
+stories.md
+domain.yml
+nlu.md
+nlu_config.yml
+endpoints.yml
+
+You can validate your YML config file online to ensure no issues with the file
+http://yaml-online-parser.appspot.com/
+
+10. Add the Sub directory like below
+Restaruantbot
+	models
+		current
+			nlu
+			dialogue
+	data
+		stories.md
+		nlu.json/nlu.md
+	domain.yml
+	config.yml
+	endpoints.yml
+	
+11. Train RASA Core
+move to the  folder Restaruantbot:
+python -m rasa_core.train -d domain.yml -s ./data/stories.md -o ./models/current/dialogue --epochs 200
+
+
+12. Train the model though RASA NLU
+move to the  folder Restaruantbot:
+sudo python -m rasa_nlu.train -c config.yml --data ./data/nlu.json -o models --fixed_model_name nlu --project current --verbose
+
+13. Run the RASA
+move to the  folder Restaruantbot:
+$ python -m rasa_core.run --enable_api  --endpoints endpoints.yml -d ./models/current/dialogue  -u ./models/current/nlu  -o out.log
+
+14. Send request to Rasa Core
+sudo curl -XPOST http://localhost:5005/conversations/nlu/respond -d '{"query":"hello there"}' | python -mjson.tool
+sudo curl  http://localhost:5005/conversations | python -mjson.tool
+sudo curl  http://localhost:5005/conversations/nlu/tracker | python -mjson.tool
+
+
+13. Install RASA NLU Trainer
+sudo apt install npm
+sudo n 8.11.4
+sudo apt-get install nodejs-legacy Or ln -s /usr/bin/nodejs /usr/bin/node
+npm i -g rasa-nlu-trainer
+sudo rasa-nlu-trainer -p 50002
+
+14. If you wants to run only NLU Server:
+move to the  folder Restaruantbot:
+python -m rasa_nlu.server -c ./config.yml --path .
+
+
+15. If we want to configure spacy pipeline then follow below
+	A. Install Spacy NLU
+	pip install rasa_nlu[spacy]
+	python -m spacy download en_core_web_md
+	python -m spacy link en_core_web_md en
+
+	B. Update the config file (nlu_config.yml)
+		language: "en"
+	pipeline:
+	- name: "nlp_spacy"
+	- name: "tokenizer_spacy"
+	- name: "intent_entity_featurizer_regex"
+	- name: "intent_featurizer_spacy"
+	- name: "ner_crf"
+	- name: "ner_synonyms"
+	- name: "intent_classifier_sklearn"
+	- name: "ner_duckling_http"
+	url: "http://duckling:8000"
+
+	C. Train model
+	sudo python -m rasa_nlu.train -c nlu_config.yml --data nlu.md -o models --fixed_model_name nlu --project current --verbose
+	
+	D. Start NLU Server
+	
+
+1. Story (stories.md)
+	## Name
+	* Example Messages (intent (and the entities))
+	- Actions
+Example:
+	
+		"""
+		## happy path
+		* greet
+		  - utter_greet
+		* mood_great
+		  - utter_happy
+
+		## sad path 1
+		* greet
+		  - utter_greet
+		* mood_unhappy
+		  - utter_cheer_up
+		  - utter_did_that_help
+		* mood_affirm
+		  - utter_happy
+
+		## sad path 2
+		* greet
+		  - utter_greet
+		* mood_unhappy
+		  - utter_cheer_up
+		  - utter_did_that_help
+		* mood_deny
+		  - utter_goodbye
+
+		## say goodbye
+		* goodbye
+		  - utter_goodbye
+		"""
+2. Domine (domain.yml)
+		intents: things you expect users to say
+		actions: hings your bot can do and say
+		templates: template strings for the things your bot can say
+		entities: pieces of info you want to extract from messages
+		slots: information to keep track of during a conversation
+		
+3. Train the Model
+python -m rasa_core.train -d domain.yml -s stories.md -o models/dialogue
+
+4. Talking to Bot
+python -m rasa_core.run -d models/dialogue
+
+5. ADD NLU (nlu.md)
+
+Uses Markdown Format
+"""
+## intent:greet
+- hey
+- hello
+- hi
+- good morning
+- good evening
+- hey there
+
+## intent:goodbye
+- bye
+- goodbye
+- see you around
+- see you later
+
+## intent:mood_affirm
+- yes
+- indeed
+- of course
+- that sounds good
+- correct
+
+## intent:mood_deny
+- no
+- never
+- I don't think so
+- don't like that
+- no way
+- not really
+
+## intent:mood_great
+- perfect
+- very good
+- great
+- amazing
+- wonderful
+- I am feeling very good
+- I am great
+- I'm good
+
+## intent:mood_unhappy
+- sad
+- very sad
+- unhappy
+- bad
+- very bad
+- awful
+- terrible
+- not very good
+- extremly sad
+- so sad
+"""
+
+6. NLU Configuration (nlu_config.yml)
+"""
+language: en
+pipeline: tensorflow_embedding
+"""	
+
+7. Train the NLU Model
+A new directory should be created: models/current/nlu
+Here 'current' is project
+
+python -m rasa_nlu.train -c nlu_config.yml --data nlu.md -o models --fixed_model_name nlu --project current --verbose
+
+8. Talking to bot with CORE+NLU
+python -m rasa_core.run -d models/dialogue -u models/current/nlu
+
+
+FAQ:
+1. how to see RASA NLU version
+sudo python -c "import rasa_nlu; print rasa_nlu.__version__"
+
+2. 	
+
+
+
+
+
+
+
+
+Folder Strecture
+Restaruantbot
+	models
+		current
+			nlu
+			dialogue
+	data
+	domain.yml
+	config.yml
+	
+CORE Training (In the current folder Restaruantbot):
+python -m rasa_core.train -d domain.yml -s data/stories.md -o models/current/dialogue --epochs 200
+
+CORE Server Starting (In the Current folder Restaruantbot)
+$ python -m rasa_core.run --enable_api  --endpoints endpoints.yml -d ./models/current/dialogue  -u ./models/current/nlu  -o out.log
+python -m rasa_nlu.train -c config.yml --data data/nlu_data.md -o models --fixed_model_name nlu_model --project current --verbose
+
+
+NLU Training
+
+
+curl -XPOST localhost:5005/conversations/default -d '{"query":"hello there"}' | python -mjson.tool
+curl -XPOST localhost:5005/default -d '{"query":"hello there"}' | python -mjson.tool
+
+POST Query:
+curl -XPOST localhost:5005/conversations/12456/respond -d '{"query":"hello there"}' | python -mjson.tool
+
+

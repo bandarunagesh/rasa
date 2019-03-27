@@ -1,0 +1,1 @@
+python -m rasa_nlu.train -c C:\\\Users\\nbandar2\\Documents\\Projects\\Chatbot\\RSU_NLP\\projects\\config_spacy.json

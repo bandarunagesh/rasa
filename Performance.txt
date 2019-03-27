@@ -1,0 +1,1 @@
+python -m rasa_nlu.evaluate -d "C:\\Users\\nbandar2\\Documents\\Projects\\Chatbot\\RSU_NLP\\projects\\TestData.json" -m "C:\\Users\\nbandar2\\Documents\\Projects\\Chatbot\\RSU_NLP\\projects\\default" -c "C:\\Users\\nbandar2\\Documents\\Projects\\Chatbot\\RSU_NLP\\projects\\config_spacy.json"
